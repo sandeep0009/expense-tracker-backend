@@ -28,5 +28,7 @@ export const expenseMessage={
     error:"Bad request for expenses",
     created:"Expense created successfully",
     fetchedAll:"All expenses fetched successfully",
-    fetchedCategory:"Fetched all category"
+    fetchedCategory:"Fetched all category",
+    deleted:"Successfully deleted",
+    updated:"Successfully updated"
 }

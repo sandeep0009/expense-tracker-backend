@@ -72,8 +72,62 @@ export const filterQuery = async (req: Request, res: Response): Promise<any> => 
   
       res.status(200).json({ message: expenseMessage.fetchedCategory, response });
     } catch (error) {
-      console.error("Error fetching transactions:", error);
       res.status(500).json({ message: expenseMessage.error });
     }
   };
   
+
+
+  export const deleteExpense=async(
+    req:Request,
+    res:Response
+  ):Promise<any>=>{
+    try {
+        const userId=req.userId;
+        if (!userId) {
+            res.status(401).json({ message: userMiddleware.unauthorized });
+            return;
+        }
+        const {delteid}=req.params;
+        await client.expense.delete({where:{
+            id:delteid
+        }});
+        res.status(200).json({message:expenseMessage.deleted});
+        
+    } catch (error) {
+        res.status(500).json({ message: expenseMessage.error });        
+    }
+};
+
+
+export const updateExpense=async(
+    req:Request,
+    res:Response
+):Promise<any>=>{
+    try {
+        const userId=req.userId;
+        if (!userId) {
+            res.status(401).json({ message: userMiddleware.unauthorized });
+            return;
+        }
+
+        const{data}=req.body;
+        const {expenseId}=req.params;
+        const updatedDate=await client.expense.updateMany(
+            {
+                where:{
+                    id:expenseId
+                },
+                data{
+                    title:data.title,
+                    category:data.category,
+                    spentMoney:data.spentMoney
+                }
+            }
+        )
+    } catch (error) {
+        res.status(500).json({ message: expenseMessage.error });
+
+        
+    }
+}
