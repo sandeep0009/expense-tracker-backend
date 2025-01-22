@@ -32,3 +32,12 @@ export const expenseMessage={
     deleted:"Successfully deleted",
     updated:"Successfully updated"
 }
+
+
+export const analyticMessage={
+    error:"Bad request for analytics",
+    totalSpendingMsg:"Fetched all total spending",
+    avgDaily:"Fetched all average daily",
+    topcategory:"Fetched all top category",
+    topTransaction:"Fetched all top transaction"
+}
