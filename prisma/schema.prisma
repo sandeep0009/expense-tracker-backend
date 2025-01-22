@@ -16,7 +16,8 @@ model User{
   email       String     @unique
   imageUrl    String?
   expense     Expense[]
-  totalIncome Income[]     
+  totalIncome Income[]  
+  createdAt   DateTime   @default(now())   
 }
 
 
@@ -28,6 +29,7 @@ model Expense{
     userId              String     @db.ObjectId
     user                User       @relation(fields: [userId],references: [id])
     date                DateTime   @default(now())
+    createdAt           DateTime   @default(now())
     @@index([userId])
 }
 
@@ -38,6 +40,7 @@ model Income{
     date                DateTime   @default(now())
     userId              String     @db.ObjectId
     user                User       @relation(fields: [userId],references: [id])
+    createdAt           DateTime   @default(now())
     @@index([userId])
 }
 enum Category{

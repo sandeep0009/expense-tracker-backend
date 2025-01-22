@@ -22,3 +22,11 @@ export const userMiddleware={
     
     
 }
+
+
+export const expenseMessage={
+    error:"Bad request for expenses",
+    created:"Expense created successfully",
+    fetchedAll:"All expenses fetched successfully",
+    fetchedCategory:"Fetched all category"
+}
