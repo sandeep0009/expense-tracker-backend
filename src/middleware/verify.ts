@@ -17,13 +17,11 @@ export const verifyUser=async(
             return;
         }
         const decoded=jwt.verify(token,JWT_KEY) as JwtPayload;
-        if (!decoded || !decoded.id) {
-            res.status(401).json({ message: userMiddleware.notValid });
-            return;
-          }
-
-          req.user = { id: decoded.id };
-          next();
+        if (typeof decoded === "string") {
+            return false;
+        }
+        req.userId = decoded.userId;
+        next();
 
         
     } catch (error) {

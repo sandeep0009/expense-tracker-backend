@@ -9,10 +9,9 @@ export const signup=async(
     req:Request,
     res:Response
 ):Promise<any>=>{
-    try {
+    try { 
         const {name,email,password,imageUrl}=req.body;
-
-        const userExist=await client.user.findUnique({where:email});
+        const userExist=await client.user.findUnique({where:{email:email}});
         if(userExist){
             res.status(401).json({message:userMessage.userExist});
             return;
@@ -30,6 +29,7 @@ export const signup=async(
 
         
     } catch (error) {
+        console.log(error)
         return res.status(404).json({message:userMessage.error})
         
     }
@@ -41,8 +41,9 @@ export const signin= async(
     res:Response
 ):Promise<any>=>{
     try {
+        console.log(req.body)
         const {email,password}=req.body;
-        const userExist=await client.user.findUnique({where:email});
+        const userExist=await client.user.findUnique({where:{email:email}});
         if(!userExist){
             res.status(404).json({message:userMessage.credentialError});
             return;
@@ -50,7 +51,9 @@ export const signin= async(
         if(userExist?.password===undefined || userExist?.password==null){
             return
         }
-        const comparePassword=await bcrypt.compare(userExist?.password,password);
+        console.log(userExist.password)
+        const comparePassword=await bcrypt.compare(password,userExist.password);
+
         if(!comparePassword){
             res.status(404).json({message:userMessage.credentialError});
             return;

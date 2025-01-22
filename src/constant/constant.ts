@@ -11,12 +11,14 @@ export const userMessage={
 export const incomeMessage={
     error:"Bad request for income",
     created:"Successfully created",
-    fetched:"Successfully fetched details of income"
+    fetched:"Successfully fetched details of income",
+    updated:"Income updated successfully"
 }
 
 export const userMiddleware={
     error:"Token is invalid",
     notValid:"Token you provided is invalid.",
     unauthorized:"User is not authorized or missing userId",
+    
     
 }

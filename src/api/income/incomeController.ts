@@ -9,7 +9,7 @@ export const createIncome=async(
 ):Promise<any>=>{
     try {
         const {amount,source}=req.body;
-        const userId=req.user?.id;
+        const userId=req.userId;
 
         if(!userId){
             res.status(401).json({message:userMiddleware.unauthorized});
@@ -34,12 +34,12 @@ export const createIncome=async(
 
 
 export const getIncome=async(
-    req:Request,
+    req:Request ,
     res:Response
 
 ):Promise<any>=>{
     try {
-        const userId=req.user?.id;
+        const userId=req.userId;
         if(!userId){
             res.status(401).json({message:userMiddleware.unauthorized});
             return;
@@ -67,7 +67,7 @@ export const updateIncome=async(
     res:Response
 ):Promise<any>=>{
     try {        
-        const userId=req.user?.id;
+        const userId=req.userId;
         const {income,source}=req.body
         if(!userId){
             res.status(401).json({message:userMiddleware.unauthorized});
@@ -85,7 +85,8 @@ export const updateIncome=async(
 
             }
            }
-        )
+        );
+        res.status(200).json({message:incomeMessage.updated,data});
         
     } catch (error) {
         res.status(404).json({message:incomeMessage.error});
