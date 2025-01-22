@@ -1,0 +1,65 @@
+
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User{
+  id          String     @id      @default(auto()) @map("_id") @db.ObjectId
+  name        String 
+  password    String?
+  email       String     @unique
+  imageUrl    String?
+  expense     Expense[]
+  totalIncome Income[]     
+}
+
+
+model Expense{
+    id                  String     @id      @default(auto()) @map("_id") @db.ObjectId
+    title               String
+    category            Category
+    spentMoney          Int
+    userId              String     @db.ObjectId
+    user                User       @relation(fields: [userId],references: [id])
+    date                DateTime   @default(now())
+    @@index([userId])
+}
+
+model Income{
+    id                  String     @id              @default(auto()) @map("_id") @db.ObjectId
+    amount              Int
+    source              Source
+    date                DateTime   @default(now())
+    userId              String     @db.ObjectId
+    user                User       @relation(fields: [userId],references: [id])
+    @@index([userId])
+}
+enum Category{
+  Grocery
+  Shopping
+  FoodAndDining
+  Transportation
+  Deposit
+  Investment
+  Miscellaneous
+}
+
+
+enum Source {
+  Business
+  Salary
+  Freelancing
+  Investments
+  RentalIncome
+  SideHustle
+  Gifts
+  Bonuses
+  Interest
+  Others
+}
