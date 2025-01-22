@@ -1,4 +1,4 @@
-import { Request ,Response} from "express"
+import { Request ,Response} from "express";
 import { userMessage } from "../../constant/constant"
 import { client } from "../../helper/prismaClient";
 import bcrypt from "bcryptjs";
