@@ -118,16 +118,111 @@ export const updateExpense=async(
                 where:{
                     id:expenseId
                 },
-                data{
-                    title:data.title,
-                    category:data.category,
-                    spentMoney:data.spentMoney
+                data:{
+                    ...data
                 }
             }
-        )
+        );
+        res.status(200).json({message:expenseMessage.updated,updatedDate})
     } catch (error) {
         res.status(500).json({ message: expenseMessage.error });
 
+        
+    }
+}
+
+
+export const getDashboard=async(
+    req:Request,
+    res:Response
+):Promise<any>=>{
+    try {
+        const userId=req.userId;
+        if (!userId) {
+            res.status(401).json({ message: userMiddleware.unauthorized });
+            return;
+        }
+        const totalIncome=await client.income.aggregate(
+            {
+                _sum:{
+                    amount:true
+                },
+                where:{
+                    userId
+                }
+            }
+            
+        );
+        const currentMonth=new Date().getMonth()+1;
+        const currentYear=new Date().getFullYear();
+        const monthlyExpense=await client.expense.aggregate(
+            {
+                _sum:{
+                    spentMoney:true
+                },
+                where:{
+                    userId,
+                    date:{
+                        gte:new Date(`${currentYear}-${currentMonth}-01`),
+                        lt: new Date(`${currentYear}-${currentMonth + 1}-01`),
+                    }
+                }
+            }
+        );
+
+
+        const totalExpense=await client.expense.aggregate({
+            _sum:{
+                spentMoney:true
+            },
+            where:{
+                userId
+            }
+        });
+
+        const totalIncomeValue=totalIncome._sum.amount || 0;
+        const totalExpenseValue=totalExpense._sum.spentMoney || 0;
+        const savings=totalIncomeValue-totalExpenseValue;
+
+        let result=[];
+        result.push(totalExpenseValue);
+        result.push(totalIncomeValue);
+        result.push(savings);
+        res.status(200).json({message:expenseMessage.dashboard,result});
+
+
+        
+    } catch (error) {
+        res.status(500).json({ message: expenseMessage.error });
+
+        
+    }
+}
+
+
+export const recentTransaction=async(
+    req:Request,
+    res:Response
+):Promise<any>=>{
+    try {
+        const userId=req.userId;
+        if (!userId) {
+            res.status(401).json({ message: userMiddleware.unauthorized });
+            return;
+        }
+        const currentTransaction=await client.expense.findMany({
+            where:{
+                userId
+            },
+            orderBy:{
+                createdAt:"desc"
+            },
+            take:5
+        });
+        res.status(200).json({message:expenseMessage.recentTransaction,currentTransaction});
+        
+    } catch (error) {
+        res.status(500).json({ message: expenseMessage.error });
         
     }
 }

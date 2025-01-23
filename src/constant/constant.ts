@@ -30,7 +30,9 @@ export const expenseMessage={
     fetchedAll:"All expenses fetched successfully",
     fetchedCategory:"Fetched all category",
     deleted:"Successfully deleted",
-    updated:"Successfully updated"
+    updated:"Successfully updated",
+    dashboard:"Successfully got all values of dashboard",
+    recentTransaction:"Successfully fetched recent transactions"
 }
 
 
