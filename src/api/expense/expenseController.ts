@@ -37,9 +37,7 @@ export const allExpense=async(
         res.status(200).json({message:expenseMessage.fetchedAll,response});
         
     } catch (error) {
-        res.status(404).json({message:expenseMessage.error});
-
-        
+        res.status(404).json({message:expenseMessage.error});       
     }
 }
 
@@ -223,6 +221,51 @@ export const recentTransaction=async(
         
     } catch (error) {
         res.status(500).json({ message: expenseMessage.error });
+        
+    }
+}
+
+export const spendingOverview=async(
+    req:Request,
+    res:Response
+):Promise<any>=>{
+    try {
+        const userId=req.userId;
+        if (!userId) {
+            res.status(401).json({ message: userMiddleware.unauthorized });
+            return;
+        }
+        const {days}=req.params;
+        const numberOfDays=parseInt(days);
+
+        const currentDate=new Date();
+        const startDate=new Date(currentDate);
+        startDate.setDate(currentDate.getDate()-numberOfDays);
+        const overviewData=await client.expense.groupBy(
+            {
+                by:["category"],
+                _sum:{
+                    spentMoney:true
+                },
+                where:{
+                    userId,
+                    date:{
+                        gte:startDate,
+                        lte:currentDate
+                    }
+                }
+            }
+        );
+
+        const formatData=overviewData.map((data)=>({
+            category:data.category,
+            totalSpentMoney:data._sum.spentMoney ||0
+        }));
+        res.status(200).json({message:expenseMessage.overView,formatData});
+        
+    } catch (error) {
+        res.status(500).json({ message: expenseMessage.error });
+
         
     }
 }
