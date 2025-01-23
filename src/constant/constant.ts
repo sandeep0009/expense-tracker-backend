@@ -30,5 +30,16 @@ export const expenseMessage={
     fetchedAll:"All expenses fetched successfully",
     fetchedCategory:"Fetched all category",
     deleted:"Successfully deleted",
-    updated:"Successfully updated"
+    updated:"Successfully updated",
+    dashboard:"Successfully got all values of dashboard",
+    recentTransaction:"Successfully fetched recent transactions"
+}
+
+
+export const analyticMessage={
+    error:"Bad request for analytics",
+    totalSpendingMsg:"Fetched all total spending",
+    avgDaily:"Fetched all average daily",
+    topcategory:"Fetched all top category",
+    topTransaction:"Fetched all top transaction"
 }
