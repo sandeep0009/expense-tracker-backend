@@ -32,7 +32,8 @@ export const expenseMessage={
     deleted:"Successfully deleted",
     updated:"Successfully updated",
     dashboard:"Successfully got all values of dashboard",
-    recentTransaction:"Successfully fetched recent transactions"
+    recentTransaction:"Successfully fetched recent transactions",
+    overView:"Successfully fetched overview data"
 }
 
 
