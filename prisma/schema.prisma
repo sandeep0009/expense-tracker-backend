@@ -8,42 +8,65 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
-
-model User{
+model User {
   id          String     @id      @default(auto()) @map("_id") @db.ObjectId
-  name        String 
+  name        String
   password    String?
   email       String     @unique
   imageUrl    String?
-  expense     Expense[]
-  totalIncome Income[]  
-  createdAt   DateTime   @default(now())   
+  expenses    Expense[]
+  incomes     Income[]
+  budgets     Budget[]
+  createdAt   DateTime   @default(now())
 }
 
-
-model Expense{
-    id                  String     @id      @default(auto()) @map("_id") @db.ObjectId
-    title               String
-    category            Category
-    spentMoney          Int
-    userId              String     @db.ObjectId
-    user                User       @relation(fields: [userId],references: [id])
-    date                DateTime   @default(now())
-    createdAt           DateTime   @default(now())
-    @@index([userId])
+model Expense {
+  id          String     @id      @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  category    Category
+  spentMoney  Int
+  userId      String     @db.ObjectId
+  user        User       @relation(fields: [userId], references: [id])
+  date        DateTime   @default(now())
+  createdAt   DateTime   @default(now())
+  @@index([userId])
 }
 
-model Income{
-    id                  String     @id              @default(auto()) @map("_id") @db.ObjectId
-    amount              Int
-    source              Source
-    date                DateTime   @default(now())
-    userId              String     @db.ObjectId
-    user                User       @relation(fields: [userId],references: [id])
-    createdAt           DateTime   @default(now())
-    @@index([userId])
+model Income {
+  id          String     @id      @default(auto()) @map("_id") @db.ObjectId
+  amount      Int
+  source      Source
+  userId      String     @db.ObjectId
+  user        User       @relation(fields: [userId], references: [id])
+  date        DateTime   @default(now())
+  createdAt   DateTime   @default(now())
+  @@index([userId])
 }
-enum Category{
+
+model Budget {
+  id          String     @id      @default(auto()) @map("_id") @db.ObjectId
+  name        String    
+  totalAmount Int
+  spentAmount Int        @default(0) 
+  remaining   Int        @default(0)
+  isActive    Boolean    @default(true)
+  userId      String     @db.ObjectId
+  user        User       @relation(fields: [userId], references: [id])
+  createdAt   DateTime   @default(now())
+  categories  BudgetCategory[]
+}
+
+model BudgetCategory {
+  id          String     @id      @default(auto()) @map("_id") @db.ObjectId
+  name        Category   
+  allocated   Int        
+  spent       Int        @default(0) 
+  budgetId    String     @db.ObjectId
+  budget      Budget     @relation(fields: [budgetId], references: [id])
+  createdAt   DateTime   @default(now())
+}
+
+enum Category {
   Grocery
   Shopping
   FoodAndDining
@@ -52,7 +75,6 @@ enum Category{
   Investment
   Miscellaneous
 }
-
 
 enum Source {
   Business
