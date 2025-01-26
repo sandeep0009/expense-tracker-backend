@@ -11,6 +11,7 @@ export const verifyUser=async(
     try {
         const authHeader = req.headers.authorization;
         const token = authHeader?.split(" ")[1];
+        console.log(token)
 
         if(!token){
             res.status(401).json({message:userMiddleware.notValid});

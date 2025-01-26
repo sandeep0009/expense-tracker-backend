@@ -10,7 +10,7 @@ export const signup=async(
     res:Response
 ):Promise<any>=>{
     try { 
-        const {name,email,password,imageUrl}=req.body;
+        const {name,email,password,imageUrl}=req.body.formData;
         const userExist=await client.user.findUnique({where:{email:email}});
         if(userExist){
             res.status(401).json({message:userMessage.userExist});
@@ -41,8 +41,9 @@ export const signin= async(
     res:Response
 ):Promise<any>=>{
     try {
+        
+        const {email,password}=req.body.formData;
         console.log(req.body)
-        const {email,password}=req.body;
         const userExist=await client.user.findUnique({where:{email:email}});
         if(!userExist){
             res.status(404).json({message:userMessage.credentialError});

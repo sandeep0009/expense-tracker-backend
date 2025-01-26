@@ -12,11 +12,12 @@ export const createExpense=async(
             res.status(401).json({message:userMiddleware.unauthorized});
             return;
         }
+        const spendMoney=parseInt(spentMoney);
         const data=await client.expense.create({
             data:{
                 title,
                 category,
-                spentMoney,
+                spentMoney:spendMoney,
                 userId
             }
         });
@@ -180,12 +181,13 @@ export const getDashboard=async(
 
         const totalIncomeValue=totalIncome._sum.amount || 0;
         const totalExpenseValue=totalExpense._sum.spentMoney || 0;
-        const savings=totalIncomeValue-totalExpenseValue;
+        const savings=Math.abs(totalIncomeValue-totalExpenseValue);
 
         let result=[];
         result.push(totalExpenseValue);
         result.push(totalIncomeValue);
         result.push(savings);
+        result.push(monthlyExpense._sum.spentMoney || 0);
         res.status(200).json({message:expenseMessage.dashboard,result});
 
 
