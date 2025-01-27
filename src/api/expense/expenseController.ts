@@ -42,41 +42,73 @@ export const allExpense=async(
     }
 }
 
-export const filterQuery = async (req: Request, res: Response): Promise<any> => {
+export const filterQuery = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { category, timeRange, type } = req.query;
-      const userId = req.userId; 
-  
-      if (!userId) {
-        res.status(401).json({ message: userMiddleware.unauthorized });
-        return;
-      }
-      const filter: any = { userId };
-      if (category && category !== "all") {
-        filter.category = category;
-      }
-      if (timeRange) {
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - parseInt(timeRange as string, 10));
-        filter.createdAt = { gte: startDate };
-      }
+        const { category = "all", timeRange, type, page = "1", limit = "10", search = "" } = req.query;
+        const userId = req.userId;
 
-      if (type) {
-        filter.type = type
-      }
-      const response = await client.expense.findMany({
-        where: filter,
-        orderBy: { createdAt: "desc" },
-      });
-  
-      res.status(200).json({ message: expenseMessage.fetchedCategory, response });
+        if (!userId) {
+             res.status(401).json({ message: userMiddleware.unauthorized });
+        }
+
+        const pageNumber = parseInt(page as string, 10);
+        const pageSize = parseInt(limit as string, 10);
+
+        if (isNaN(pageNumber) || pageNumber < 1 || isNaN(pageSize) || pageSize < 1) {
+             res.status(400).json({ message: "Invalid pagination parameters" });
+        }
+
+        const skip = (pageNumber - 1) * pageSize;
+        const searchQuery = search as string;
+
+        const whereClause: any = {
+            userId,
+            ...(category !== "all" && { category }),
+            ...(timeRange && (() => {
+                const days = parseInt(timeRange as string, 10);
+                if (!isNaN(days) && days > 0) {
+                    const startDate = new Date();
+                    startDate.setDate(startDate.getDate() - days);
+                    return { createdAt: { gte: startDate } };
+                }
+                return undefined;
+            })()),
+            ...(type && { type }),
+        };
+
+        if (searchQuery) {
+            whereClause.OR = [
+                { title: { contains: searchQuery, mode: "insensitive" } },
+                { description: { contains: searchQuery, mode: "insensitive" } },
+                { spentMoney: { equals: parseFloat(searchQuery) } },
+            ];
+        }
+
+        const data = await client.expense.findMany({
+            where: whereClause,
+            orderBy: { createdAt: "desc" },
+            skip,
+            take: pageSize,
+        });
+
+        const totalItems = await client.expense.count({ where: whereClause });
+        const totalPages = Math.ceil(totalItems / pageSize);
+
+        const result = {
+            data,
+            pagination: {
+                totalItems,
+                totalPages,
+                currentPage: pageNumber,
+                pageSize,
+            },
+        };
+
+        res.status(200).json({ message: expenseMessage.fetchedCategory, result });
     } catch (error) {
-      res.status(500).json({ message: expenseMessage.error });
+        res.status(500).json({ message: expenseMessage.error });
     }
-  };
-  
-
-
+};
   export const deleteExpense=async(
     req:Request,
     res:Response
@@ -179,21 +211,36 @@ export const getDashboard=async(
             }
         });
 
-        const totalIncomeValue=totalIncome._sum.amount || 0;
-        const totalExpenseValue=totalExpense._sum.spentMoney || 0;
-        const savings=Math.abs(totalIncomeValue-totalExpenseValue);
+        const totalIncomeValue = totalIncome._sum.amount || 0;
+        const totalExpenseValue = totalExpense._sum.spentMoney || 0;
+        const savings = Math.abs(totalIncomeValue - totalExpenseValue);
+        const monthly = monthlyExpense._sum.spentMoney || 0;
 
-        let result=[];
-        result.push(totalExpenseValue);
-        result.push(totalIncomeValue);
-        result.push(savings);
-        result.push(monthlyExpense._sum.spentMoney || 0);
-        res.status(200).json({message:expenseMessage.dashboard,result});
+        const totalIncomeAndExpense = totalIncomeValue + totalExpenseValue;
+        const incomePercentage = totalIncomeAndExpense > 0 ? (totalIncomeValue / totalIncomeAndExpense) * 100 : 0;
+        const expensePercentage = totalIncomeAndExpense > 0 ? (totalExpenseValue / totalIncomeAndExpense) * 100 : 0;
+        const savingsPercentage = totalIncomeValue > 0 ? (savings / totalIncomeValue) * 100 : 0;
+        const monthlyExpensePercentage = totalExpenseValue > 0 ? (monthly / totalExpenseValue) * 100 : 0;
+
+        const resultArray = [
+            { label: 'Total Income', value: totalIncomeValue },
+            { label: 'Total Expense', value: totalExpenseValue },
+            { label: 'Savings', value: savings },
+            { label: 'Monthly Expense', value: monthly },
+            { label: 'Income Percentage', value: incomePercentage },
+            { label: 'Expense Percentage', value: expensePercentage },
+            { label: 'Savings Percentage', value: savingsPercentage },
+            { label: 'Monthly Expense Percentage', value: monthlyExpensePercentage }
+        ];
+
+        res.status(200).json({message:expenseMessage.dashboard,resultArray});
+
+        
 
 
         
     } catch (error) {
-        res.status(500).json({ message: expenseMessage.error });
+        res.status(500).json({ message: expenseMessage.error});
 
         
     }
@@ -237,8 +284,8 @@ export const spendingOverview=async(
             res.status(401).json({ message: userMiddleware.unauthorized });
             return;
         }
-        const {days}=req.params;
-        const numberOfDays=parseInt(days);
+        const { days } = req.query;
+        const numberOfDays = parseInt(days as string, 10);
 
         const currentDate=new Date();
         const startDate=new Date(currentDate);
