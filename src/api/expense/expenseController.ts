@@ -44,65 +44,66 @@ export const allExpense=async(
 
 export const filterQuery = async (req: Request, res: Response): Promise<void> => {
     try {
-        const { category = "all", timeRange, type, page = "1", limit = "10", search = "" } = req.query;
-        const userId = req.userId;
 
-        if (!userId) {
-             res.status(401).json({ message: userMiddleware.unauthorized });
+        const userId=req.userId;
+         if(!userId){
+            res.status(401).json({message:userMiddleware.unauthorized});
+            return;
+        }
+        const {
+            page = "1",
+            limit = "10",
+            search = "",
+            range,
+            category,
+            type,
+        } = req.query;
+
+        const currentPage = parseInt(page as string, 10);
+        const rowsPerPage = parseInt(limit as string, 10);
+
+        if (isNaN(currentPage) || currentPage < 1 || isNaN(rowsPerPage) || rowsPerPage < 1) {
+             res.status(400).json({ message: "Invalid pagination parameters." });
         }
 
-        const pageNumber = parseInt(page as string, 10);
-        const pageSize = parseInt(limit as string, 10);
+        const skip = (currentPage - 1) * rowsPerPage;
+        const filters: any = { userId };
 
-        if (isNaN(pageNumber) || pageNumber < 1 || isNaN(pageSize) || pageSize < 1) {
-             res.status(400).json({ message: "Invalid pagination parameters" });
-        }
-
-        const skip = (pageNumber - 1) * pageSize;
-        const searchQuery = search as string;
-
-        const whereClause: any = {
-            userId,
-            ...(category !== "all" && { category }),
-            ...(timeRange && (() => {
-                const days = parseInt(timeRange as string, 10);
-                if (!isNaN(days) && days > 0) {
-                    const startDate = new Date();
-                    startDate.setDate(startDate.getDate() - days);
-                    return { createdAt: { gte: startDate } };
-                }
-                return undefined;
-            })()),
-            ...(type && { type }),
-        };
-
-        if (searchQuery) {
-            whereClause.OR = [
-                { title: { contains: searchQuery, mode: "insensitive" } },
-                { description: { contains: searchQuery, mode: "insensitive" } },
-                { spentMoney: { equals: parseFloat(searchQuery) } },
+        if (search) {
+            filters.OR = [
+                { title: { contains: search as string, mode: "insensitive" } },
+                { description: { contains: search as string, mode: "insensitive" } },
             ];
         }
 
-        const data = await client.expense.findMany({
-            where: whereClause,
-            orderBy: { createdAt: "desc" },
+        if (category) {
+            filters.category = category;
+        }
+
+        if (type) {
+            filters.type = type;
+        }
+
+        if (range) {
+            const [start, end] = (range as string).split(",");
+            filters.createdAt = {
+                gte: new Date(start),
+                lte: new Date(end),
+            };
+        }
+
+        const transactions = await client.expense.findMany({
+            where: filters,
             skip,
-            take: pageSize,
+            take: rowsPerPage,
+            orderBy: { createdAt: "desc" },
         });
 
-        const totalItems = await client.expense.count({ where: whereClause });
-        const totalPages = Math.ceil(totalItems / pageSize);
+        const total = await client.expense.count({ where: filters });
 
-        const result = {
-            data,
-            pagination: {
-                totalItems,
-                totalPages,
-                currentPage: pageNumber,
-                pageSize,
-            },
-        };
+        let result={
+            transactions,total
+        }
 
         res.status(200).json({ message: expenseMessage.fetchedCategory, result });
     } catch (error) {
@@ -318,3 +319,70 @@ export const spendingOverview=async(
         
     }
 }
+
+
+export const spendingTrends = async (req: Request, res: Response): Promise<any> => {
+    try {
+        const userId = req.userId;
+        if (!userId) {
+            res.status(401).json({ message: "Unauthorized access." });
+            return;
+        }
+
+        const { viewMode } = req.query;
+        if (!viewMode) {
+            res.status(400).json({ message: "Please specify a valid viewMode (daily, weekly, or monthly)." });
+            return;
+        }
+
+        let startDate: Date | null = new Date();
+        let periodFormatter: (date: Date) => string;
+
+        switch (viewMode) {
+            case "daily":
+                startDate.setDate(startDate.getDate() - 7);
+                periodFormatter = (date) => date.toISOString().split("T")[0];
+                break;
+            case "weekly":
+                startDate.setFullYear(startDate.getFullYear() - 1);
+                periodFormatter = (date) => {
+                    const week = Math.ceil(date.getDate() / 7);
+                    return `${date.getFullYear()}-W${week}`;
+                };
+                break;
+            case "monthly":
+                startDate.setDate(startDate.getDate() - 30);
+                periodFormatter = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+                break;
+            default:
+                res.status(400).json({ message: "Invalid viewMode provided." });
+                return;
+        }
+
+        const spendTrends = await client.expense.groupBy({
+            by: ["createdAt"],
+            where: {
+                userId,
+                createdAt: {
+                    gte: startDate,
+                },
+            },
+            _sum: {
+                spentMoney: true,
+            },
+            orderBy: {
+                createdAt: "asc",
+            },
+        });
+
+        const trendsData = spendTrends.map((trend) => ({
+            period: periodFormatter(new Date(trend.createdAt)),
+            totalAmount: trend._sum?.spentMoney || 0,
+        }));
+
+        res.status(200).json({ spendingTrends: trendsData });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Internal server error." });
+    }
+};

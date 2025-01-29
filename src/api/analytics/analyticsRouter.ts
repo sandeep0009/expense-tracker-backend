@@ -1,12 +1,11 @@
 import { Router } from "express";
 import { verifyUser } from "../../middleware/verify";
-import { averageDaily, topCategory, totalSpending, topTransaction } from "./analyticsController";
+import { getAnalytics, getCategoryDistribution } from "./analyticsController";
 
 const router = Router();
 
-router.get('/analytics/total-spending/:timeRange', verifyUser, totalSpending);
-router.get('/analytics/average-daily/:timeRange', verifyUser, averageDaily);
-router.get('/analytics/top-category/:timeRange', verifyUser, topCategory);
-router.get('/analytics/top-transaction/:timeRange', verifyUser, topTransaction);
+router.get('/analytics', verifyUser,getAnalytics);
+router.get('/category-distribution',verifyUser,getCategoryDistribution);
+
 
 export default router;

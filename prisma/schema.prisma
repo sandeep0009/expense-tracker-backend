@@ -16,7 +16,6 @@ model User {
   imageUrl    String?
   expenses    Expense[]
   incomes     Income[]
-  budgets     Budget[]
   createdAt   DateTime   @default(now())
 }
 
@@ -41,29 +40,6 @@ model Income {
   date        DateTime   @default(now())
   createdAt   DateTime   @default(now())
   @@index([userId])
-}
-
-model Budget {
-  id          String     @id      @default(auto()) @map("_id") @db.ObjectId
-  name        String    
-  totalAmount Int
-  spentAmount Int        @default(0) 
-  remaining   Int        @default(0)
-  isActive    Boolean    @default(true)
-  userId      String     @db.ObjectId
-  user        User       @relation(fields: [userId], references: [id])
-  createdAt   DateTime   @default(now())
-  categories  BudgetCategory[]
-}
-
-model BudgetCategory {
-  id          String     @id      @default(auto()) @map("_id") @db.ObjectId
-  name        Category   
-  allocated   Int        
-  spent       Int        @default(0) 
-  budgetId    String     @db.ObjectId
-  budget      Budget     @relation(fields: [budgetId], references: [id])
-  createdAt   DateTime   @default(now())
 }
 
 enum Category {
