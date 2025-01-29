@@ -12,7 +12,9 @@ export const signup=async(
 ):Promise<any>=>{
     try { 
         const {name,email,password,imageUrl}=req.body.formData;
-        const vaildCheck=userSchemaVaildation.safeParse(req.body.formatData);
+        console.log(req.body.formData)
+        const vaildCheck = userSchemaVaildation.safeParse(req.body.formData);
+        console.log(vaildCheck)
         if(!vaildCheck.success){
             res.status(404).json({message:"please provide valid data input"});
             return;
@@ -50,7 +52,7 @@ export const signin= async(
     try {
         
         const {email,password}=req.body.formData;
-        const vaildCheck=userLoginValidation.safeParse(req.body.formatData);
+        const vaildCheck=userLoginValidation.safeParse(req.body.formData);
         if(!vaildCheck.success){
             res.status(404).json({message:"please provide valid data input"});
             return;
@@ -63,7 +65,6 @@ export const signin= async(
         if(userExist?.password===undefined || userExist?.password==null){
             return
         }
-        console.log(userExist.password)
         const comparePassword=await bcrypt.compare(password,userExist.password);
 
         if(!comparePassword){
@@ -72,7 +73,7 @@ export const signin= async(
         }
         const token=jwt.sign({
             userId:userExist.id
-        },JWT_KEY);
+        },JWT_KEY,{expiresIn:"1hr"});
 
         res.status(200).json({message:userMessage.logged,token});
         
