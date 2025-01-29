@@ -4,6 +4,7 @@ import { client } from "../../helper/prismaClient";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { JWT_KEY } from "../../config/config";
+import { userLoginValidation, userSchemaVaildation } from "../../helper/zodValidation";
 
 export const signup=async(
     req:Request,
@@ -11,6 +12,12 @@ export const signup=async(
 ):Promise<any>=>{
     try { 
         const {name,email,password,imageUrl}=req.body.formData;
+        const vaildCheck=userSchemaVaildation.safeParse(req.body.formatData);
+        if(!vaildCheck.success){
+            res.status(404).json({message:"please provide valid data input"});
+            return;
+
+        }
         const userExist=await client.user.findUnique({where:{email:email}});
         if(userExist){
             res.status(401).json({message:userMessage.userExist});
@@ -43,7 +50,11 @@ export const signin= async(
     try {
         
         const {email,password}=req.body.formData;
-        console.log(req.body)
+        const vaildCheck=userLoginValidation.safeParse(req.body.formatData);
+        if(!vaildCheck.success){
+            res.status(404).json({message:"please provide valid data input"});
+            return;
+        }
         const userExist=await client.user.findUnique({where:{email:email}});
         if(!userExist){
             res.status(404).json({message:userMessage.credentialError});

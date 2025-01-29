@@ -1,12 +1,19 @@
 import { Request,Response } from "express"
 import { expenseMessage, userMiddleware } from "../../constant/constant"
 import { client } from "../../helper/prismaClient";
+import { createExpenseValidaiton } from "../../helper/zodValidation";
 export const createExpense=async(
     req:Request,
     res:Response
 ):Promise<any>=>{
     try {
         const{title,category,spentMoney}=req.body;
+
+        const validCheck=createExpenseValidaiton.safeParse(req.body);
+        if(!validCheck){
+            res.status(404).json({message:"please provide valid data"});
+            return;
+        }
         const userId=req.userId;
          if(!userId){
             res.status(401).json({message:userMiddleware.unauthorized});

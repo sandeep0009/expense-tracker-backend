@@ -2,6 +2,7 @@ import { incomeMessage, userMiddleware } from "../../constant/constant";
 import { Request ,Response} from "express";
 import { client } from "../../helper/prismaClient";
 import { Source } from "@prisma/client";
+import { createIncomeValidation } from "../../helper/zodValidation";
 
 
 export const createIncome=async(
@@ -11,6 +12,11 @@ export const createIncome=async(
     try {
         const {amount,source}=req.body;
         const userId=req.userId;
+        const validCheck=createIncomeValidation.safeParse(req.body);
+        if(!validCheck){
+            res.status(404).json({message:"please provide valid data input"});
+            return;
+        }
 
         if(!userId){
             res.status(401).json({message:userMiddleware.unauthorized});
