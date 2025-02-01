@@ -18,7 +18,7 @@ export const signup=async(
             res.status(404).json({message:"please provide valid data input"});
             return;
         }
-        const userExist=await client.user.findUnique({where:{email}});
+        const userExist=await client.user.findFirst({where:{email}});
         if(userExist){
             res.status(401).json({message:userMessage.userExist});
             return;
@@ -54,7 +54,7 @@ export const signin= async(
             res.status(404).json({message:"please provide valid data input"});
             return;
         }
-        const userExist=await client.user.findUnique({where:{email}});
+        const userExist=await client.user.findFirst({where:{email}});
         console.log("userExist",userExist);
         if(!userExist){
             res.status(404).json({message:userMessage.credentialError});
@@ -106,7 +106,7 @@ export const signin= async(
 export const verifyOtp=async(req:Request,res:Response):Promise<any>=>{
     try {
         const {email,otp}=req.body;
-        const userExist=await client.user.findUnique({where:{email:email}});
+        const userExist=await client.user.findFirst({where:{email:email}});
         if(!userExist){
             res.status(404).json({message:userMessage.credentialError});
             return;
