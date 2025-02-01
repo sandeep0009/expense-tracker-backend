@@ -229,6 +229,7 @@ export const getDashboard=async(
         const expensePercentage = totalIncomeAndExpense > 0 ? (totalExpenseValue / totalIncomeAndExpense) * 100 : 0;
         const savingsPercentage = totalIncomeValue > 0 ? (savings / totalIncomeValue) * 100 : 0;
         const monthlyExpensePercentage = totalExpenseValue > 0 ? (monthly / totalExpenseValue) * 100 : 0;
+        const totlaBalance=totalIncomeValue-totalExpenseValue;
 
         const resultArray = [
             { label: 'Total Income', value: totalIncomeValue },
@@ -238,7 +239,8 @@ export const getDashboard=async(
             { label: 'Income Percentage', value: incomePercentage },
             { label: 'Expense Percentage', value: expensePercentage },
             { label: 'Savings Percentage', value: savingsPercentage },
-            { label: 'Monthly Expense Percentage', value: monthlyExpensePercentage }
+            { label: 'Monthly Expense Percentage', value: monthlyExpensePercentage },
+            {label:'Total Balance',value:totlaBalance}
         ];
 
         res.status(200).json({message:expenseMessage.dashboard,resultArray});

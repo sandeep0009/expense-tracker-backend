@@ -5,7 +5,9 @@ export const userMessage={
     created:"Successfully created",
     logged:"Successfully loged in",
     userExist:"Sorry this user already exist",
-    credentialError:"Sorry you had provied wrong credentials"
+    credentialError:"Sorry you had provied wrong credentials",
+    otp:"Invalid or expired Otp",
+    otpVerify:"Otp verified successfully"
 }
 
 export const incomeMessage={
@@ -43,4 +45,9 @@ export const analyticMessage={
     avgDaily:"Fetched all average daily",
     topcategory:"Fetched all top category",
     topTransaction:"Fetched all top transaction"
+}
+
+
+export const budgetMessage={
+    error:"Bad Request for analytics",
 }

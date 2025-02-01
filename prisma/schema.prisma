@@ -16,6 +16,8 @@ model User {
   imageUrl    String?
   expenses    Expense[]
   incomes     Income[]
+  otp         String?
+  otpExpiry   DateTime?
   createdAt   DateTime   @default(now())
 }
 

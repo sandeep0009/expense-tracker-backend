@@ -5,20 +5,19 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { JWT_KEY } from "../../config/config";
 import { userLoginValidation, userSchemaVaildation } from "../../helper/zodValidation";
-
+import crypto from "crypto";
+import { transport } from "../../helper/nodeMailer";
 export const signup=async(
     req:Request,
     res:Response
 ):Promise<any>=>{
     try { 
-        const {name,email,password,imageUrl}=req.body.formData;
-        console.log(req.body.formData)
-        const vaildCheck = userSchemaVaildation.safeParse(req.body.formData);
+        const {name,email,password,imageUrl}=req.body;
+        const vaildCheck = userSchemaVaildation.safeParse(req.body);
         console.log(vaildCheck)
         if(!vaildCheck.success){
             res.status(404).json({message:"please provide valid data input"});
             return;
-
         }
         const userExist=await client.user.findUnique({where:{email:email}});
         if(userExist){
@@ -34,25 +33,22 @@ export const signup=async(
                 imageUrl
             }
         });
-        res.status(201).json({message:userMessage.created,newUser});
-
-        
+        const token=jwt.sign({
+            userId:newUser.id
+        },JWT_KEY,{expiresIn:"1hr"});
+        res.status(201).json({message:userMessage.created,token});        
     } catch (error) {
         console.log(error)
-        return res.status(404).json({message:userMessage.error})
-        
+        return res.status(404).json({message:userMessage.error});       
     }
-
 }
-
 export const signin= async(
     req:Request,
     res:Response
 ):Promise<any>=>{
-    try {
-        
-        const {email,password}=req.body.formData;
-        const vaildCheck=userLoginValidation.safeParse(req.body.formData);
+    try {      
+        const {email,password}=req.body;
+        const vaildCheck=userLoginValidation.safeParse(req.body);
         if(!vaildCheck.success){
             res.status(404).json({message:"please provide valid data input"});
             return;
@@ -66,20 +62,84 @@ export const signin= async(
             return
         }
         const comparePassword=await bcrypt.compare(password,userExist.password);
-
         if(!comparePassword){
             res.status(404).json({message:userMessage.credentialError});
+            return;
+        }
+        const otp=crypto.randomInt(100000, 999999).toString();
+        console.log(otp)
+        const ok=await client.user.update({
+            where:{email},
+            data:{
+                otp,
+                otpExpiry:new Date(Date.now()+5*60*1000)
+            }
+
+        });
+        try {
+            const l= await transport.sendMail({
+                from:process.env.EMAIL_USER,
+                to:email,
+                subject:"Pocket pilot verification code",
+                text:`Your OTP code is ${otp}.It will expiry in 5 minutes.`
+            })
+            
+        } catch (error) {
+            console.log(error)
+            
+        }
+        const token=jwt.sign({
+            userId:userExist.id
+        },JWT_KEY,{expiresIn:"1hr"});
+      
+  
+        res.status(200).json({message:userMessage.logged,token});
+        
+    } catch (error) {
+        return res.status(404).json({message:userMessage.error});        
+    }
+}
+export const verifyOtp=async(req:Request,res:Response):Promise<any>=>{
+    try {
+        const {email,otp}=req.body;
+        const userExist=await client.user.findUnique({where:{email:email}});
+        console.log(userExist)
+        if(!userExist){
+            res.status(404).json({message:userMessage.credentialError});
+            return;
+        }
+        if(!userExist.otp || userExist.otp!==otp || !userExist.otpExpiry || new Date() > userExist.otpExpiry){
+            res.status(404).json({message:userMessage.otp});
             return;
         }
         const token=jwt.sign({
             userId:userExist.id
         },JWT_KEY,{expiresIn:"1hr"});
+        await client.user.update(
+            {
+                where:{email},
+                data:{
+                    otp:null,
+                    otpExpiry:null
+                }
+            }
+        );
+        res.status(200).json({message:userMessage.otpVerify,token});
+    } catch (error) {
+        return res.status(404).json({message:userMessage.error});      
+    }
 
-        res.status(200).json({message:userMessage.logged,token});
+}
+
+
+export const googleAuth=async(
+    req:Request,
+    res:Response
+):Promise<any>=>{
+    try {
         
     } catch (error) {
-        return res.status(404).json({message:userMessage.error})
-
+        console.log("error",error);
         
     }
 }
