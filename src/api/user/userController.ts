@@ -14,7 +14,6 @@ export const signup=async(
     try { 
         const {name,email,password,imageUrl}=req.body;
         const vaildCheck = userSchemaVaildation.safeParse(req.body);
-        console.log(vaildCheck)
         if(!vaildCheck.success){
             res.status(404).json({message:"please provide valid data input"});
             return;
@@ -67,7 +66,6 @@ export const signin= async(
             return;
         }
         const otp=crypto.randomInt(100000, 999999).toString();
-        console.log(otp)
         const ok=await client.user.update({
             where:{email},
             data:{
@@ -103,7 +101,6 @@ export const verifyOtp=async(req:Request,res:Response):Promise<any>=>{
     try {
         const {email,otp}=req.body;
         const userExist=await client.user.findUnique({where:{email:email}});
-        console.log(userExist)
         if(!userExist){
             res.status(404).json({message:userMessage.credentialError});
             return;

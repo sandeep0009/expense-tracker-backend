@@ -4,9 +4,11 @@ import router from "./routes";
 import './types'
 const app=express();
 
+
+app.use(cors());
 app.use(
     cors({
-      origin: ["https://expense-tracker-frontend-git-master-sandeep0009s-projects.vercel.app"],
+      origin: ["https://vercel.com/sandeep0009s-projects/expense-tracker-frontend-yawt"],
       methods: ["GET", "POST", "PUT", "DELETE"], 
       allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true, 
