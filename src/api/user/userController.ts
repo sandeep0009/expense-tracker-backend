@@ -47,12 +47,15 @@ export const signin= async(
 ):Promise<any>=>{
     try {      
         const {email,password}=req.body;
+        console.log("email ,passowrd",email,password);
         const vaildCheck=userLoginValidation.safeParse(req.body);
+        console.log("validcheck",vaildCheck)
         if(!vaildCheck.success){
             res.status(404).json({message:"please provide valid data input"});
             return;
         }
         const userExist=await client.user.findUnique({where:{email:email}});
+        console.log("userExist",userExist);
         if(!userExist){
             res.status(404).json({message:userMessage.credentialError});
             return;
@@ -60,7 +63,10 @@ export const signin= async(
         if(userExist?.password===undefined || userExist?.password==null){
             return
         }
+        console.log("passowrd",password);
+        console.log("useExist.password",userExist.password);
         const comparePassword=await bcrypt.compare(password,userExist.password);
+        console.log("comparePAssword",comparePassword);
         if(!comparePassword){
             res.status(404).json({message:userMessage.credentialError});
             return;
