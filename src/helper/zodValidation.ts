@@ -3,7 +3,7 @@ export const userSchemaVaildation=z.object({
 
      name:z.string(),
      email:z.string().nonempty().email(),
-     password:z.string().min(4).max(8).regex(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{4,8}$/, "Password must contain at least one letter, one number, and one special character"),
+     password:z.string().min(4).max(8),
      imageUrl: z.string().optional(),
 });
 
